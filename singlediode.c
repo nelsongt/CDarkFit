@@ -6,34 +6,37 @@
 ////////////////////////////////////////////////////////////////////////////////////
 */
 
+#include "singlediode.h"
 
-double quadratic (double x, void *params)
+double singleDiode_func (double x, void *params)
 {
-  struct quadratic_params *p = (struct quadratic_params *) params;
+  struct singleDiode_params *p = (struct singleDiode_params *) params;
 
   double a = p->a;
   double b = p->b;
   double c = p->c;
-
-  return (a * x + b) * x + c;
+  double d = p->d;
+  double e = p->e;
+  
+  return a * exp((e - x*c)/b) + ((e - x*c)/d) - x;
 }
 
-double quadratic_deriv (double x, void *params)
+/*double singleDiode_deriv (double x, void *params)
 {
-  struct quadratic_params *p 
-    = (struct quadratic_params *) params;
+  struct singleDiode_params *p 
+    = (struct singleDiode_params *) params;
 
   double a = p->a;
   double b = p->b;
   double c = p->c;
 
   return 2.0 * a * x + b;
-}
+}*/
 
-void quadratic_fdf (double x, void *params, double *y, double *dy)
+/*void singleDiode_fdf (double x, void *params, double *y, double *dy)
 {
-  struct quadratic_params *p 
-    = (struct quadratic_params *) params;
+  struct singleDiode_params *p 
+    = (struct singleDiode_params *) params;
 
   double a = p->a;
   double b = p->b;
@@ -41,4 +44,4 @@ void quadratic_fdf (double x, void *params, double *y, double *dy)
 
   *y = (a * x + b) * x + c;
   *dy = 2.0 * a * x + b;
-}
+}*/

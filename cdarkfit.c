@@ -24,11 +24,16 @@
 #include <math.h>
 
 #include "levmar.h"
+#include "function.h"
 
 #ifndef LM_DBL_PREC
 #error Example program assumes that levmar has been compiled with double precision, see LM_DBL_PREC!
 #endif
 
+/* the following macros define the various physical constants */
+#define BOLTZ	 // Boltzmann constant. Unit: eV/K
+#define ELEM	 // Elementary charge. Unit: e
+#define TEMP 300 // Temperature. Unit: K 
 
 /* the following macros concern the initialization of a random number generator for adding noise */
 #undef REPEATABLE_RANDOM
@@ -67,13 +72,13 @@ double r1, r2, val;
   return val;
 }
 
-/* model to be fitted to measurements: x_i = p[0]*exp(-p[1]*i) + p[2], i=0...n-1 */
-void expfunc(double *p, double *x, int m, int n, void *data)
+/* single diode model to be fitted to measurements: y_i = p[0]*exp((x_i-y_i)*p[1]) + p[2], x = points from data, i=0...n-1 */
+void singleDiodeFunc(double *p, double *x, int m, int n, void *data)
 {
 register int i;
 
   for(i=0; i<n; ++i){
-    x[i]=p[0]*exp(-p[1]*i) + p[2];
+    x[i]=p[0]*exp(i*p[1]) + p[2];
   }
 }
 
@@ -92,10 +97,29 @@ register int i, j;
 
 int main()
 {
-const int n=40, m=3; // 40 measurements, 3 parameters
-double p[m], x[n], opts[LM_OPTS_SZ], info[LM_INFO_SZ];
-register int i;
-int ret;
+  int status;
+  int iter = 0, max_iter = 100;
+  const gsl_root_fsolver_type *T;
+  gsl_root_fsolver *s;
+  double r = 0;
+  double x_lo = 0.0, x_hi = 150.0;
+  gsl_function F;
+  
+  struct solver_params params;
+  params.status = status;
+  params.iter = iter;
+  params.max_iter = max_iter;
+  params.T = T;
+  params.s = s;
+  params.r = r;
+  params.x_lo = x_lo;
+  params.x_hi = x_hi;
+  params.F = F;
+  
+  const int n=40, m=3; // 40 measurements, 3 parameters
+  double p[m], x[n], opts[LM_OPTS_SZ], info[LM_INFO_SZ];
+  register int i;
+  int ret;
 
   /* generate some measurement using the exponential model with
    * parameters (5.0, 0.1, 1.0), corrupted with zero-mean
@@ -113,7 +137,7 @@ int ret;
   opts[4]=LM_DIFF_DELTA; // relevant only if the finite difference Jacobian version is used 
 
   /* invoke the optimization function */
-  ret=dlevmar_der(expfunc, jacexpfunc, p, x, m, n, 1000, opts, info, NULL, NULL, NULL); // with analytic Jacobian
+  ret=dlevmar_der(singleDiodeFunc, jacexpfunc, p, x, m, n, 1000, opts, info, NULL, NULL, NULL); // with analytic Jacobian
   //ret=dlevmar_dif(expfunc, p, x, m, n, 1000, opts, info, NULL, NULL, NULL); // without Jacobian
   printf("Levenberg-Marquardt returned in %g iter, reason %g, sumsq %g [%g]\n", info[5], info[6], info[1], info[0]);
   printf("Best fit parameters: %.7g %.7g %.7g\n", p[0], p[1], p[2]);

@@ -6,15 +6,19 @@ CC=gcc
 CONFIGFLAGS=#-ULINSOLVERS_RETAIN_MEMORY
 #ARCHFLAGS=-march=pentium4 # YOU MIGHT WANT TO UNCOMMENT THIS FOR P4
 CFLAGS=$(CONFIGFLAGS) $(ARCHFLAGS) -O3 -funroll-loops -Wall #-g #-ffast-math #-pg
-LDFLAGS=-L.
-PROGOBJS=cdarkfit.o
-PROGSRCS=cdarkfit.c
+LDFLAGS=-L. -L/usr/local/lib
+PROGOBJS=singlediode.o function.o cdarkfit.o
+PROGSRCS=singlediode.c function.c cdarkfit.c
 
 all: cdarkfit
 
 cdarkfit: $(PROGOBJS) liblevmar.a
-	$(CC) $(LDFLAGS) $(PROGOBJS) -o cdarkfit -llevmar -lm
+	$(CC) $(LDFLAGS) $(PROGOBJS) -o cdarkfit -llevmar -lm -lgsl -lgslcblas
 
+singlediode.o: 
+
+function.o:
+	
 cdarkfit.o: levmar.h
 
 clean:
