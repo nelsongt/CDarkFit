@@ -13,13 +13,13 @@ PROGSRCS=singlediode.c function.c cdarkfit.c
 all: cdarkfit
 
 cdarkfit: $(PROGOBJS) liblevmar.a
-	$(CC) $(LDFLAGS) $(PROGOBJS) -o cdarkfit -llevmar -lm -lgsl -lgslcblas
+	$(CC) $(CFLAGS) $(LDFLAGS) $(PROGOBJS) -o cdarkfit -llevmar -lm -lgsl -lgslcblas
 
 singlediode.o: 
 
-function.o:
-	
-cdarkfit.o: levmar.h
+function.o: singlediode.h
+
+cdarkfit.o: levmar.h function.h
 
 clean:
 	@rm -f $(PROGOBJS)

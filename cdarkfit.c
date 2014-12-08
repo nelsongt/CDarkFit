@@ -78,7 +78,8 @@ void singleDiodeFunc(double *p, double *x, int m, int n, void *data)
 register int i;
 
   for(i=0; i<n; ++i){
-    x[i]=p[0]*exp(i*p[1]) + p[2];
+    //x[i]=p[0]*exp(x[i] - data[i]*p[1]) + p[2];
+    x[i]=p[0]*exp(-p[1]*i) + p[2];
   }
 }
 
