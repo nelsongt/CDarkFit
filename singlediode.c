@@ -18,7 +18,7 @@ double singleDiode_func (double y, void *params)
   double d = p->d;
   double x = p->x;
   
-  return a * exp((x - y*c)/b) + ((x - y*c)/d) - y;
+  return a * exp((x - y*c)/(b*100)) + ((x - y*c)/(d*1000)) - y;
 }
 
 /*double singleDiode_deriv (double x, void *params)

@@ -112,7 +112,7 @@ int main()
   register int i;
   int ret;
   
-  double x_vals[10] = {0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10};
+  double x_vals[10] = {0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5};
 
   void *data = (void *)x_vals;  // cast into the void
     
@@ -121,13 +121,13 @@ int main()
    * parameters (5.0, 0.1, 1.0), corrupted with zero-mean
    * Gaussian noise of s=0.1
    */
-  double answer[4] = {1.0E-2, 0.03, 1.0E-2, 10};
+  double answer[4] = {1.0E-5, 0.0003, 1.0E-4, 1.0};
   INIT_RANDOM(0);
   for(i=0; i<n; ++i)
-    y[i]=function_solver(x_vals[i], answer, m) + gNoise(0.0, 0.0001);
+    y[i]=function_solver(x_vals[i], answer, m);// + gNoise(0.0, 0.0001);
 
   /* initial parameters estimate */
-  p[0]=1.0E-4; p[1]=0.0259; p[2]=2.0E-4; p[3] = 100;
+  p[0]=1.0E-4; p[1]=0.000259; p[2]=2.0E-4; p[3] = 0.010;
 
   /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
   opts[0]=1E-1; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;
