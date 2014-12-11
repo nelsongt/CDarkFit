@@ -18,10 +18,10 @@ struct solver_params
     int status, iter, max_iter;
     const gsl_root_fsolver_type *T;
     gsl_root_fsolver *s;
-    double r, x_lo, x_hi;
+    double r, y_lo, y_hi;
     gsl_function F;
     struct singleDiode_params params;
   };
   
   
-double function_solver (void *params);
+double function_solver (double x_val, double *coeffs, int m);

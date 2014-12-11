@@ -9,34 +9,28 @@
 #include "function.h"
 
 
-double function_solver (void *params)
+double function_solver (double x_val, double *coeffs, int m)
 {
-  struct solver_params *p = (struct solver_params *) params;
+  struct solver_params p;
   
-  int status = p->status;
-  int iter = p->iter; 
-  int max_iter = p->max_iter;
-  const gsl_root_fsolver_type *T = p->T;
-  gsl_root_fsolver *s = p->s;
-  double r = p->r;
-  double x_lo = p->x_lo;
-  double x_hi = p->x_hi;
-  gsl_function F = p->F;
+  p.status = 0;
+  p.iter = 0; 
+  p.max_iter = 100;
+  p.r = 0;
+  p.y_lo = 0.0;
+  p.y_hi = 1000.0;
   
-  
-  
-  
-  struct singleDiode_params diode_params = {1.0E-4, 0.0259, 2.0E-4, 100000, 0.1};
+  struct singleDiode_params diode_params = {coeffs[0], coeffs[1], coeffs[2], coeffs[3], x_val};
 
-  F.function = &singleDiode_func;
-  F.params = &params;
+  p.F.function = &singleDiode_func;
+  p.F.params = &diode_params;
 
-  T = gsl_root_fsolver_brent;
-  s = gsl_root_fsolver_alloc (T);
-  gsl_root_fsolver_set (s, &F, x_lo, x_hi);
+  p.T = gsl_root_fsolver_brent;
+  p.s = gsl_root_fsolver_alloc (p.T);
+  gsl_root_fsolver_set (p.s, &p.F, p.y_lo, p.y_hi);
 
   printf ("using %s method\n", 
-          gsl_root_fsolver_name (s));
+          gsl_root_fsolver_name (p.s));
 
   printf ("%5s [%9s, %9s] %9s %9s\n",
           "iter", "lower", "upper", "root", 
@@ -44,24 +38,25 @@ double function_solver (void *params)
 
   do
     {
-      iter++;
-      status = gsl_root_fsolver_iterate (s);
-      r = gsl_root_fsolver_root (s);
-      x_lo = gsl_root_fsolver_x_lower (s);
-      x_hi = gsl_root_fsolver_x_upper (s);
-      status = gsl_root_test_interval (x_lo, x_hi,
+      p.iter++;
+      p.status = gsl_root_fsolver_iterate (p.s);
+      p.r = gsl_root_fsolver_root (p.s);
+      p.y_lo = gsl_root_fsolver_x_lower (p.s);
+      p.y_hi = gsl_root_fsolver_x_upper (p.s);
+      p.status = gsl_root_test_interval (p.y_lo, p.y_hi,
                                        0, 0.001);
 
-      if (status == GSL_SUCCESS)
+      if (p.status == GSL_SUCCESS)
         printf ("Converged:\n");
 
       printf ("%5d [%.7f, %.7f] %.7f %.7f\n",
-              iter, x_lo, x_hi,
-              r, x_hi - x_lo);
+              p.iter, p.y_lo, p.y_hi,
+              p.r, p.y_hi - p.y_lo);
     }
-  while (status == GSL_CONTINUE && iter < max_iter);
+  while (p.status == GSL_CONTINUE && p.iter < p.max_iter);
 
-  gsl_root_fsolver_free (s);
+  gsl_root_fsolver_free (p.s);
 
-  return r;
+  return p.r;
 }
+  

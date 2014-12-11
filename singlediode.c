@@ -8,7 +8,7 @@
 
 #include "singlediode.h"
 
-double singleDiode_func (double x, void *params)
+double singleDiode_func (double y, void *params)
 {
   struct singleDiode_params *p = (struct singleDiode_params *) params;
 
@@ -16,9 +16,9 @@ double singleDiode_func (double x, void *params)
   double b = p->b;
   double c = p->c;
   double d = p->d;
-  double e = p->e;
+  double x = p->x;
   
-  return a * exp((e - x*c)/b) + ((e - x*c)/d) - x;
+  return a * exp((x - y*c)/b) + ((x - y*c)/d) - y;
 }
 
 /*double singleDiode_deriv (double x, void *params)

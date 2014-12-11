@@ -73,13 +73,14 @@ double r1, r2, val;
 }
 
 /* single diode model to be fitted to measurements: y_i = p[0]*exp((x_i-y_i)*p[1]) + p[2], x = points from data, i=0...n-1 */
-void singleDiodeFunc(double *p, double *x, int m, int n, void *data)
+void singleDiodeFunc(double *p, double *y, int m, int n, void *data)
 {
 register int i;
+double *x = (double *)data;
 
   for(i=0; i<n; ++i){
-    //x[i]=p[0]*exp(x[i] - data[i]*p[1]) + p[2];
-    x[i]=p[0]*exp(-p[1]*i) + p[2];
+    y[i]=function_solver(x[i], p, m);
+    //x[i]=p[0]*exp(-p[1]*i) + p[2];
   }
 }
 
@@ -87,61 +88,57 @@ register int i;
 void jacexpfunc(double *p, double *jac, int m, int n, void *data)
 {   
 register int i, j;
-  
+double *x = (double *)data;
+double y = 0;
+double exp_f = 0;
+double denom = 0;
+
   /* fill Jacobian row by row */
   for(i=j=0; i<n; ++i){
-    jac[j++]=exp(-p[1]*i);
-    jac[j++]=-p[0]*i*exp(-p[1]*i);
-    jac[j++]=1.0;
+    y = function_solver(x[i], p, m);
+    exp_f = exp((x[i] - p[2]*y)/p[1]);
+    denom = (p[0]*p[2]/p[1])*y+p[2]/p[3]+1;
+    jac[j++]=exp_f/denom;
+    jac[j++]=(p[0]*(p[2]*y-x[i])*exp_f)/(p[1]*p[1]*denom);
+    jac[j++]=((-p[0]*x[i]/p[1])*exp_f - (y/p[3]))/denom;
+    jac[j++]=(p[2]*y-x[i])/(p[3]*p[3]*denom);
   }
 }
 
 int main()
 {
-  int status;
-  int iter = 0, max_iter = 100;
-  const gsl_root_fsolver_type *T;
-  gsl_root_fsolver *s;
-  double r = 0;
-  double x_lo = 0.0, x_hi = 150.0;
-  gsl_function F;
-  
-  struct solver_params params;
-  params.status = status;
-  params.iter = iter;
-  params.max_iter = max_iter;
-  params.T = T;
-  params.s = s;
-  params.r = r;
-  params.x_lo = x_lo;
-  params.x_hi = x_hi;
-  params.F = F;
-  
-  const int n=40, m=3; // 40 measurements, 3 parameters
-  double p[m], x[n], opts[LM_OPTS_SZ], info[LM_INFO_SZ];
+  const int n=10, m=4; // 40 measurements, 4 parameters
+  double p[m], y[n], opts[LM_OPTS_SZ], info[LM_INFO_SZ];
   register int i;
   int ret;
+  
+  double x_vals[10] = {0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.10};
 
+  void *data = (void *)x_vals;  // cast into the void
+    
+    
   /* generate some measurement using the exponential model with
    * parameters (5.0, 0.1, 1.0), corrupted with zero-mean
    * Gaussian noise of s=0.1
    */
+  double answer[4] = {1.0E-2, 0.03, 1.0E-2, 10};
   INIT_RANDOM(0);
   for(i=0; i<n; ++i)
-    x[i]=(5.0*exp(-0.1*i) + 1.0) + gNoise(0.0, 0.1);
+    y[i]=function_solver(x_vals[i], answer, m) + gNoise(0.0, 0.0001);
 
-  /* initial parameters estimate: (1.0, 0.0, 0.0) */
-  p[0]=1.0; p[1]=0.0; p[2]=0.0;
+  /* initial parameters estimate */
+  p[0]=1.0E-4; p[1]=0.0259; p[2]=2.0E-4; p[3] = 100;
 
   /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
   opts[0]=1E-1; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;
   opts[4]=LM_DIFF_DELTA; // relevant only if the finite difference Jacobian version is used 
 
   /* invoke the optimization function */
-  ret=dlevmar_der(singleDiodeFunc, jacexpfunc, p, x, m, n, 1000, opts, info, NULL, NULL, NULL); // with analytic Jacobian
-  //ret=dlevmar_dif(expfunc, p, x, m, n, 1000, opts, info, NULL, NULL, NULL); // without Jacobian
+  //ret=dlevmar_der(singleDiodeFunc, jacexpfunc, p, y, m, n, 1000, opts, info, NULL, NULL, data); // with analytic Jacobian
+  ret=dlevmar_dif(singleDiodeFunc, p, y, m, n, 1000, opts, info, NULL, NULL, data); // with analytic Jacobian
+  //ret=dlevmar_dif(expfunc, p, y, m, n, 1000, opts, info, NULL, NULL, NULL); // without Jacobian
   printf("Levenberg-Marquardt returned in %g iter, reason %g, sumsq %g [%g]\n", info[5], info[6], info[1], info[0]);
-  printf("Best fit parameters: %.7g %.7g %.7g\n", p[0], p[1], p[2]);
+  printf("Best fit parameters: %.7g %.7g %.7g %.7g\n", p[0], p[1], p[2], p[3]);
 
   exit(0);
 }
