@@ -121,13 +121,13 @@ int main()
    * parameters (5.0, 0.1, 1.0), corrupted with zero-mean
    * Gaussian noise of s=0.1
    */
-  double answer[4] = {1.0E-5, 0.0003, 1.0E-4, 1.0};
+  double answer[4] = {1.0E-6, 0.0003, 1.0E-4, .010};
   INIT_RANDOM(0);
   for(i=0; i<n; ++i)
-    y[i]=function_solver(x_vals[i], answer, m);// + gNoise(0.0, 0.0001);
+    y[i]=function_solver(x_vals[i], answer, m) + gNoise(0.0, 0.0001);
 
   /* initial parameters estimate */
-  p[0]=1.0E-4; p[1]=0.000259; p[2]=2.0E-4; p[3] = 0.010;
+  p[0]=1.0E-4; p[1]=0.000259; p[2]=2.0E-4; p[3] = 0.001;
 
   /* optimization control parameters; passing to levmar NULL instead of opts reverts to defaults */
   opts[0]=1E-1; opts[1]=1E-15; opts[2]=1E-15; opts[3]=1E-20;

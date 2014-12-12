@@ -18,7 +18,7 @@ double function_solver (double x_val, double *coeffs, int m)
   p.max_iter = 100;
   p.r = 0;
   p.y_lo = 0.0;
-  p.y_hi = 10000.0;
+  p.y_hi = 1000.0;
   
   struct singleDiode_params diode_params = {coeffs[0], coeffs[1], coeffs[2], coeffs[3], x_val};
 
